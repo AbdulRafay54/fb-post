@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
@@ -20,10 +21,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "password is required"],
     },
-    profilePicture: {
-      type: String,
-      required: [true, "Picture is required"],
-    },
+  
     blogIds: [
       {
         type: mongoose.Schema.Types.ObjectId,

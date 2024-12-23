@@ -1,8 +1,6 @@
-
 import mongoose from "mongoose";
 import Blogs from "../models/blogs.model.js";
 import Users from "../models/usermodel.js";
-import { uploadImageToCloudinary } from "./users.controller.js";
 import jwt from "jsonwebtoken";
 
 const allBlogs = async (req, res) => {
@@ -32,26 +30,12 @@ const addBlog = async (req, res) => {
     });
   }
 
-  if (!req.file) {
-    return res
-      .status(400)
-      .json({ message: "Profile Picture is also required" });
-  }
-
-  const url = await uploadImageToCloudinary(req.file.path);
-
-  if (!url) {
-    return res
-      .status(500)
-      .json({ message: "error occured while uploading image" });
-  }
   const user = await Users.findOne({ email });
 
   const blog = await Blogs.create({
     title,
     description,
     postedBy: user.userName,
-    blogImage: url,
   });
 
   // Update the user document to include the blog ID
@@ -71,7 +55,7 @@ const singleBlog = async (req, res) => {
 
   if (!mongoose.isValidObjectId(id)) {
     return res.status(400).json({
-      message: "Not a Mongodb Id",
+      message: "Not a MongoDB Id",
     });
   }
 
@@ -97,7 +81,6 @@ const deleteBlog = async (req, res) => {
     return;
   }
   const token = req.cookies.refreshToken || req.body.refreshToken;
-  console.log(token);
   const decoded = jwt.verify(token, process.env.ACCESS_JWT_SECRET);
 
   // Extract user ID from the decoded token
@@ -108,9 +91,9 @@ const deleteBlog = async (req, res) => {
     await Users.findByIdAndUpdate(user._id, {
       $pull: { blogIds: id },
     });
-    const blog = await Blogs.findByIdAndDelete(id); // same way to delete with findOneAndDelete({_id : id})
+    const blog = await Blogs.findByIdAndDelete(id);
     res.status(200).json({
-      message: "blog Deleted Successfully",
+      message: "Blog Deleted Successfully",
       blog,
       user,
     });
@@ -126,35 +109,30 @@ const updateBlog = async (req, res) => {
     const { id } = req.params;
     const { title, description } = req.body;
 
-    // Validate MongoDB ObjectId
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({
         message: "Invalid MongoDB ID",
       });
     }
 
-    // Validate input fields
     if (!title && !description) {
       return res.status(400).json({
         message: "At least one field (title or description) is required",
       });
     }
 
-    // Update blog
     const blog = await Blogs.findByIdAndUpdate(
       id,
       { title, description },
       { new: true, runValidators: true }
     );
 
-    // Check if the blog exists
     if (!blog) {
       return res.status(404).json({
         message: "Blog not found",
       });
     }
 
-    // Send success response
     return res.status(200).json({
       message: "Blog updated successfully",
       blog,

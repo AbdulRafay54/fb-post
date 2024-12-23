@@ -1,6 +1,6 @@
+
 import mongoose from "mongoose";
 
-// connect server to mongodb
 
 const connectDB = async () => {
   try {
